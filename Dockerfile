@@ -1,11 +1,22 @@
 # Use an official Node.js runtime as a parent image (slim variant for better security)
-FROM node:23-slim
+FROM node:lts
 
 
 # Install Python, pip, and other dependencies
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y \
+    python3 python3-pip \
+    dpkg \
+    wget \ 
+    && \
+    # Download the Chrome .deb directly and install with dpkg
+    wget -O /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    dpkg -i /tmp/google-chrome-stable_current_amd64.deb || true && \
+    # Fix missing dependencies if dpkg reported any
+    apt-get -fy install && \
+    # Clean up apt-get cache and temporary .deb to reduce image size
+    rm -rf /var/lib/apt/lists/* /tmp/google-chrome-stable_current_amd64.deb
+    
 
 # Install uv via pip
 RUN pip3 install uv --break-system-packages 
